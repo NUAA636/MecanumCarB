@@ -92,7 +92,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		speed4 = (int)temp4;
 		sum_angle4 = sum_angle4 + (int)temp4*0.01;
 			
-		if(delta2<=10 && delta2>=-10)
+		if(delta2<=20 && delta2>=-20)
 		{
 			__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_1,0);
 		}
@@ -109,12 +109,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			{
 				HAL_GPIO_WritePin(GPIOB, BIN1_Pin, GPIO_PIN_RESET);
 				HAL_GPIO_WritePin(GPIOB, BIN2_Pin, GPIO_PIN_SET);
-				pwm_out2=-pwm_out2;
+				pwm_out2=(-1)*pwm_out2;
 			}
 			__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_1,pwm_out2);
 		}
 		
-		if(delta4<=10 && delta4>=-10)
+		if(delta4<=20 && delta4>=-20)
 		{
 			__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_2,0);
 		}
@@ -130,7 +130,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			{
 				HAL_GPIO_WritePin(GPIOA, DIN1_Pin, GPIO_PIN_RESET);
 				HAL_GPIO_WritePin(GPIOA, DIN2_Pin, GPIO_PIN_SET);
-				pwm_out4=-pwm_out4;
+				pwm_out4=(-1)*pwm_out4;
 			}
 			__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_2,pwm_out4);
 		}
