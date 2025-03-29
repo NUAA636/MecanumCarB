@@ -54,10 +54,10 @@ int delta2=0,delta4=0,cnt2=0,cnt4=0;
 int speed2=0,angle2=0,target_angle2=0,target_speed2=0,pwm_out2=0,sum_angle2=0;
 int speed4=0,angle4=0,target_angle4=0,target_speed4=0,pwm_out4=0,sum_angle4=0;
 int PID_mode=0,speed_mode=3;
-const fp32 PID_speed2[3]={100,0,10};
-const fp32 PID_position2[3]={100,0,5};
-const fp32 PID_speed4[3]={100,0,10};
-const fp32 PID_position4[3]={100,0,5};
+const fp32 PID_speed2[3]={0.12,0.01,0};
+const fp32 PID_position2[3]={4.0,0.0026,0};
+const fp32 PID_speed4[3]={0.12,0.01,0};
+const fp32 PID_position4[3]={4.0,0.0028,0};
 pid_type_def Position2,Speed2;
 pid_type_def Position4,Speed4;
 volatile uint8_t rx_flag3 = 0;
@@ -92,7 +92,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		speed4 = (int)temp4;
 		sum_angle4 = sum_angle4 + (int)temp4*0.01;
 			
-		if(delta2<=2 && delta2>=-2)
+		if(delta2<=10 && delta2>=-10)
 		{
 			__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_1,0);
 		}
@@ -114,7 +114,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_1,pwm_out2);
 		}
 		
-		if(delta4<=2 && delta4>=-2)
+		if(delta4<=10 && delta4>=-10)
 		{
 			__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_2,0);
 		}
@@ -139,6 +139,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		__HAL_TIM_SetCounter(&htim3,0);
 	}
 	
+	if(speed2!=0)
+	{
+		char buffer[64];
+		sprintf(buffer, "%d,%d,%d\n",target_speed2,speed2,-pwm_out2);
+		HAL_UART_Transmit(&huart1, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);	
+	}
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
@@ -209,9 +215,9 @@ int main(void)
 	__HAL_TIM_SetCounter(&htim2,0);
 	__HAL_TIM_SetCounter(&htim3,0);
 	PID_init(&Position2,PID_POSITION,PID_position2,500.0f,1000.0f);
-  PID_init(&Speed2,PID_POSITION,PID_speed2,20.0f,1000.0f);
+  PID_init(&Speed2,PID_POSITION,PID_speed2,30.0f,1000.0f);
 	PID_init(&Position4,PID_POSITION,PID_position4,500.0f,1000.0f);
-  PID_init(&Speed4,PID_POSITION,PID_speed4,20.0f,1000.0f);
+  PID_init(&Speed4,PID_POSITION,PID_speed4,30.0f,1000.0f);
 	HAL_UART_Receive_IT(&huart3, (uint8_t *)&rx_data3, 1);
 	
 	CAN_FilterTypeDef filter;
@@ -242,31 +248,31 @@ int main(void)
 			
 			if(rx_data3 == 0x00)	{PID_mode=0;target_angle2=0;target_angle4=0;target_speed2=0;target_speed4=0;sum_angle2=0;sum_angle4=0;speed_mode=3;}//停止
 			
-			else if(rx_data3 == 0x01)	{PID_mode=0;target_speed2=284;target_speed4=-284;target_angle2=0;target_angle4=0;sum_angle2=0;sum_angle4=0;speed_mode=1;}//定速前进
+			else if(rx_data3 == 0x01)	{PID_mode=0;target_speed2=500;target_speed4=-500;target_angle2=0;target_angle4=0;sum_angle2=0;sum_angle4=0;speed_mode=1;}//定速前进
 			else if(rx_data3 == 0xF1)	{PID_mode=1;target_angle2=1440;target_angle4=-1440;sum_angle2=0;sum_angle4=0;}//定位移前进
 			
-			else if(rx_data3 == 0x02)	{PID_mode=0;target_speed2=-284;target_speed4=284;target_angle2=0;target_angle4=0;sum_angle2=0;sum_angle4=0;speed_mode=2;}//定速后退
+			else if(rx_data3 == 0x02)	{PID_mode=0;target_speed2=-500;target_speed4=500;target_angle2=0;target_angle4=0;sum_angle2=0;sum_angle4=0;speed_mode=2;}//定速后退
 			else if(rx_data3 == 0xF2)	{PID_mode=1;target_angle2=-1440;target_angle4=1440;sum_angle2=0;sum_angle4=0;}//定位移后退
 			
-			else if(rx_data3 == 0x03)	{PID_mode=0;target_speed2=-284;target_speed4=284;target_angle2=0;target_angle4=0;sum_angle2=0;sum_angle4=0;speed_mode=2;}//定速左移
+			else if(rx_data3 == 0x03)	{PID_mode=0;target_speed2=-500;target_speed4=500;target_angle2=0;target_angle4=0;sum_angle2=0;sum_angle4=0;speed_mode=2;}//定速左移
 			else if(rx_data3 == 0xF3)	{PID_mode=1;target_angle2=-1440;target_angle4=1440;sum_angle2=0;sum_angle4=0;}//定位移左移
 			
-			else if(rx_data3 == 0x04)	{PID_mode=0;target_speed2=284;target_speed4=-284;target_angle2=0;target_angle4=0;sum_angle2=0;sum_angle4=0;speed_mode=1;}//定速右移
+			else if(rx_data3 == 0x04)	{PID_mode=0;target_speed2=500;target_speed4=-500;target_angle2=0;target_angle4=0;sum_angle2=0;sum_angle4=0;speed_mode=1;}//定速右移
 			else if(rx_data3 == 0xF4)	{PID_mode=1;target_angle2=1440;target_angle4=-1440;sum_angle2=0;sum_angle4=0;}//定位移右移
 			
-			else if(rx_data3 == 0x05)	{PID_mode=0;target_speed2=-284;target_speed4=-284;target_angle2=0;target_angle4=0;sum_angle2=0;sum_angle4=0;speed_mode=5;}//定速左转弯
+			else if(rx_data3 == 0x05)	{PID_mode=0;target_speed2=-500;target_speed4=-500;target_angle2=0;target_angle4=0;sum_angle2=0;sum_angle4=0;speed_mode=5;}//定速左转弯
 			else if(rx_data3 == 0xF5)	{PID_mode=1;target_angle2=-720;target_angle4=-720;sum_angle2=0;sum_angle4=0;}//定位移左转弯
 			
-			else if(rx_data3 == 0x06)	{PID_mode=0;target_speed2=284;target_speed4=284;target_angle2=0;target_angle4=0;sum_angle2=0;sum_angle4=0;speed_mode=4;}//定速右转弯
+			else if(rx_data3 == 0x06)	{PID_mode=0;target_speed2=500;target_speed4=500;target_angle2=0;target_angle4=0;sum_angle2=0;sum_angle4=0;speed_mode=4;}//定速右转弯
 			else if(rx_data3 == 0xF6)	{PID_mode=1;target_angle2=720;target_angle4=720;sum_angle2=0;sum_angle4=0;}//定位移右转弯
 			
 			else if(rx_data3 == 0x07)	{PID_mode=0;target_angle2=0;target_angle4=0;target_speed2=0;target_speed4=0;sum_angle2=0;sum_angle4=0;speed_mode=3;}//定速左前
 			else if(rx_data3 == 0xF7)	{PID_mode=0;target_angle2=0;target_angle4=0;target_speed2=0;target_speed4=0;sum_angle2=0;sum_angle4=0;speed_mode=3;}//定位移左前
 			
-			else if(rx_data3 == 0x08)	{PID_mode=0;target_speed2=-284;target_speed4=284;target_angle2=0;target_angle4=0;sum_angle2=0;sum_angle4=0;speed_mode=2;}//定速左后
+			else if(rx_data3 == 0x08)	{PID_mode=0;target_speed2=-500;target_speed4=500;target_angle2=0;target_angle4=0;sum_angle2=0;sum_angle4=0;speed_mode=2;}//定速左后
 			else if(rx_data3 == 0xF8)	{PID_mode=1;target_angle2=-1440;target_angle4=1440;sum_angle2=0;sum_angle4=0;}//定位移左后
 			
-			else if(rx_data3 == 0x09)	{PID_mode=0;target_speed2=284;target_speed4=-284;target_angle2=0;target_angle4=0;sum_angle2=0;sum_angle4=0;speed_mode=1;}//定速右前
+			else if(rx_data3 == 0x09)	{PID_mode=0;target_speed2=500;target_speed4=-500;target_angle2=0;target_angle4=0;sum_angle2=0;sum_angle4=0;speed_mode=1;}//定速右前
 			else if(rx_data3 == 0xF9)	{PID_mode=1;target_angle2=1440;target_angle4=-1440;sum_angle2=0;sum_angle4=0;}//定位移右前
 			
 			else if(rx_data3 == 0x0A)	{PID_mode=0;target_angle2=0;target_angle4=0;target_speed2=0;target_speed4=0;sum_angle2=0;sum_angle4=0;speed_mode=3;}//定速右后
